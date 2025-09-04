@@ -4,11 +4,14 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // This 'define' block makes the API_KEY environment variable available in the client-side code.
-  // Vite replaces `process.env.VITE_API_KEY` with the actual value at build time.
-  // The API_KEY must be set in the deployment environment (e.g., Netlify).
+  // WARNING: Hardcoding API keys is a major security risk.
+  // This key will be exposed to anyone who inspects your site's code.
+  // It is strongly recommended to use environment variables instead.
+  // For example, in Netlify, set VITE_API_KEY in your site's "Build & deploy" > "Environment" settings.
+  // The original, secure code was:
+  // 'process.env.VITE_API_KEY': JSON.stringify(process.env.VITE_API_KEY)
   define: {
-    'process.env.VITE_API_KEY': JSON.stringify(process.env.VITE_API_KEY)
+    'process.env.VITE_API_KEY': JSON.stringify('AIzaSyCvv6NEBGW_8e5IfIUpAe45uT_Fa68sUS4')
   },
   build: {
     rollupOptions: {
