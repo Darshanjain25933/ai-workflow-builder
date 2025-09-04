@@ -48,7 +48,7 @@ export const runWorkflowApi = async (workflow: Workflow): Promise<WorkflowExecut
   console.log("Running workflow with Google AI:", JSON.stringify(workflow, null, 2));
 
   const nodeOutputs = new Map<string, any>();
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.VITE_API_KEY });
 
   const findUpstreamNodes = (nodeId: string): CustomNode[] => {
     const parentEdges = workflow.edges.filter(edge => edge.target === nodeId);

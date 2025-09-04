@@ -15,7 +15,7 @@ import ReactFlow, {
   type OnEdgesDelete,
 } from '@reactflow/react';
 import { Toaster, toast } from 'react-hot-toast';
-import { ChevronUp } from 'lucide-react';
+import { ChevronUp, AlertTriangle } from 'lucide-react';
 
 import Sidebar from './components/Sidebar';
 import ConfigPanel from './components/ConfigPanel';
@@ -83,6 +83,8 @@ const AppContent: React.FC = () => {
   const [runAttempted, setRunAttempted] = useState(false);
 
   const { screenToFlowPosition, setViewport, getViewport, fitView, deleteElements, getNodes, getEdges } = useReactFlow();
+  
+  const API_KEY = process.env.VITE_API_KEY;
 
   const nodeTypes = useMemo(() => ({
     userQuery: UserQueryNode, 
@@ -215,10 +217,8 @@ const AppContent: React.FC = () => {
 
   const onNodeDataChange = useCallback(<T,>(nodeId: string, data: T) => {
     setNodes((nds) => nds.map((node) => (node.id === nodeId ? { ...node, data: data as typeof node.data } : node)));
-    if (selectedNode && selectedNode.id === nodeId) {
-      setSelectedNode(prev => prev ? ({ ...prev, data: data as typeof prev.data }) : null);
-    }
-  }, [setNodes, selectedNode]);
+    setSelectedNode(prev => (prev && prev.id === nodeId) ? ({ ...prev, data: data as typeof prev.data }) : prev);
+  }, [setNodes]);
   
    // Take snapshot AFTER data change has settled
   useEffect(() => {
@@ -432,6 +432,41 @@ const AppContent: React.FC = () => {
     toast('You have been signed out.'); 
   };
   
+  if (!API_KEY) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100">
+        <div className="max-w-2xl p-8 text-center bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-red-500/50">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/50">
+            <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+          </div>
+          <h2 className="mt-4 text-2xl font-bold">Configuration Error</h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">
+            The Google Gemini API key is missing. The application cannot connect to the AI service without it.
+          </p>
+          <div className="mt-6 p-4 bg-gray-100 dark:bg-gray-900/50 rounded-md text-left">
+            <h3 className="font-semibold text-lg">How to Fix</h3>
+            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+              You need to set the API key as an environment variable in your deployment service (e.g., Netlify, Vercel).
+            </p>
+            <ol className="list-decimal list-inside mt-2 space-y-2 text-sm">
+              <li>Go to your project's settings on your deployment platform.</li>
+              <li>Find the "Environment Variables" or "Deploy" settings section.</li>
+              <li>Create a new variable with the following name and value:</li>
+            </ol>
+            <div className="mt-3 font-mono text-xs bg-gray-200 dark:bg-gray-700 p-3 rounded">
+              <span className="font-bold">Name:</span> VITE_API_KEY<br/>
+              <span className="font-bold">Value:</span> your_actual_google_api_key
+            </div>
+            <p className="mt-4 text-xs text-red-600 dark:text-red-400 font-semibold">
+              <span className="font-bold">Important:</span> Do NOT save your API key in the source code or commit a <code>.env</code> file to your repository.
+            </p>
+          </div>
+          <p className="mt-4 text-xs text-gray-500">After setting the variable, you must re-deploy your project for the change to take effect.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return <SignInModal isOpen={true} onSignIn={handleSignIn} />;
   }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronsLeft, ChevronsRight, UploadCloud, Trash2 } from 'lucide-react';
 import { type CustomNode, type UserQueryData, type KnowledgeBaseData, type LLMEngineData, type CodeNodeData, type FileInfo, type DataLoaderData, type ImageGeneratorData, type RouterData, type TextFormatterData, type JoinData, type NoteData } from '../types';
 import { NODE_CONFIG } from '../constants';
@@ -15,14 +15,44 @@ interface ConfigPanelProps {
 }
 
 const ConfigPanel: React.FC<ConfigPanelProps> = ({ selectedNode, onClose, onNodeDataChange, onNodeDelete, isCollapsed, onToggle, isMobile }) => {
-  const handleDataChange = (field: string, value: any) => {
-    if (selectedNode) {
-      onNodeDataChange(selectedNode.id, { ...selectedNode.data, [field]: value });
+  const [formData, setFormData] = useState<CustomNode['data'] | null>(null);
+
+  // When a new node is selected, reset the local form data
+  useEffect(() => {
+    setFormData(selectedNode?.data ?? null);
+  }, [selectedNode]);
+
+  // This ref helps prevent the debounced update from firing on the initial load of a node's data
+  const initialDataRef = useRef<string | null>(null);
+  useEffect(() => {
+    initialDataRef.current = JSON.stringify(selectedNode?.data);
+  }, [selectedNode]);
+
+  // Debounce the call to the parent component's update function
+  useEffect(() => {
+    if (!selectedNode || !formData || JSON.stringify(formData) === initialDataRef.current) {
+      return;
     }
+
+    const handler = setTimeout(() => {
+      onNodeDataChange(selectedNode.id, formData);
+    }, 400); // 400ms debounce
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [formData, selectedNode, onNodeDataChange]);
+  
+  const handleDataChange = (field: string, value: any) => {
+    // Update local state immediately for a responsive UI
+    setFormData(prevData => {
+        if (!prevData) return null;
+        return { ...prevData, [field]: value };
+    });
   };
   
   const KnowledgeBaseConfig = () => {
-    const kbData = selectedNode?.data as KnowledgeBaseData;
+    const kbData = formData as KnowledgeBaseData;
     const [isDragging, setIsDragging] = useState(false);
 
     const processFile = (file: File): Promise<FileInfo> => {
@@ -113,35 +143,35 @@ const ConfigPanel: React.FC<ConfigPanelProps> = ({ selectedNode, onClose, onNode
   };
   
   const renderConfig = () => {
-    if (!selectedNode) return null;
+    if (!selectedNode || !formData) return null;
     switch (selectedNode.type) {
       case 'userQuery':
-        const uqData = selectedNode.data as UserQueryData;
+        const uqData = formData as UserQueryData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Query</label> <textarea value={uqData.query} onChange={(e) => handleDataChange('query', e.target.value)} rows={4} className="mt-1 block w-full rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" /> </div> );
       case 'knowledgeBase': return <KnowledgeBaseConfig />;
       case 'llmEngine':
-        const llmData = selectedNode.data as LLMEngineData;
+        const llmData = formData as LLMEngineData;
         return ( <div className="space-y-4"> <div> <label htmlFor="model" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label> <select id="model" value={llmData.model} onChange={(e) => handleDataChange('model', e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" > <option>gemini-2.5-flash</option> </select> </div> <div className="flex items-center"> <input id="webSearch" type="checkbox" checked={llmData.useWebSearch} onChange={(e) => handleDataChange('useWebSearch', e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500" /> <label htmlFor="webSearch" className="ml-2 block text-sm text-gray-900 dark:text-gray-200"> Use Web Search </label> </div> </div> );
       case 'code':
-        const codeData = selectedNode.data as CodeNodeData;
+        const codeData = formData as CodeNodeData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">JavaScript Snippet</label> <textarea value={codeData.script} onChange={(e) => handleDataChange('script', e.target.value)} rows={10} className="mt-1 block w-full rounded-md bg-gray-900 text-gray-200 font-mono text-xs border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" spellCheck="false" /> <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">The output of the previous node is available in the `input` variable.</p></div> );
       case 'dataLoader':
-        const dlData = selectedNode.data as DataLoaderData;
+        const dlData = formData as DataLoaderData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Source URL</label> <input type="text" value={dlData.sourceUrl} onChange={(e) => handleDataChange('sourceUrl', e.target.value)} className="mt-1 block w-full rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" /> </div> );
       case 'imageGenerator':
-        const igData = selectedNode.data as ImageGeneratorData;
+        const igData = formData as ImageGeneratorData;
         return ( <div className="space-y-4"> <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Prompt</label> <textarea value={igData.prompt} onChange={(e) => handleDataChange('prompt', e.target.value)} rows={4} className="mt-1 block w-full rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Leave blank to use input from previous node" /> </div> <div> <label htmlFor="ig-model" className="block text-sm font-medium text-gray-700 dark:text-gray-300">Model</label> <select id="ig-model" value={igData.model} onChange={(e) => handleDataChange('model', e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md" > <option>imagen-4.0-generate-001</option> </select> </div> </div> );
       case 'router':
-        const routerData = selectedNode.data as RouterData;
+        const routerData = formData as RouterData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Condition</label> <textarea value={routerData.condition} onChange={(e) => handleDataChange('condition', e.target.value)} rows={3} placeholder="e.g., input.sentiment === 'positive'" className="mt-1 block w-full rounded-md bg-gray-900 text-gray-200 font-mono text-xs border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" spellCheck="false" /> <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Define routing logic. The output will be available in the `input` variable.</p> </div> );
       case 'textFormatter':
-        const tfData = selectedNode.data as TextFormatterData;
+        const tfData = formData as TextFormatterData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Template</label> <textarea value={tfData.template} onChange={(e) => handleDataChange('template', e.target.value)} rows={4} className="mt-1 block w-full rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" /> <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Use `{'{{input}}'}` as a placeholder for the text from the connected node.</p></div> );
       case 'join':
-        const joinData = selectedNode.data as JoinData;
+        const joinData = formData as JoinData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Separator</label> <input type="text" value={joinData.separator} onChange={(e) => handleDataChange('separator', e.target.value)} className="mt-1 block w-full rounded-md bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" /> <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">Character(s) to join inputs with. Use `\n` for a new line.</p></div> );
       case 'note':
-        const noteData = selectedNode.data as NoteData;
+        const noteData = formData as NoteData;
         return ( <div> <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Note Content</label> <textarea value={noteData.text} onChange={(e) => handleDataChange('text', e.target.value)} rows={6} className="mt-1 block w-full rounded-md bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-600/50 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" /> </div> );
       case 'distributor':
         return <p className="text-sm text-gray-500 dark:text-gray-400">This node sends its input to multiple outputs. No configuration needed.</p>;
