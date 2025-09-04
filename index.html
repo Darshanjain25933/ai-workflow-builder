@@ -32,6 +32,41 @@
     </script>
     <link rel="stylesheet" href="https://aistudiocdn.com/reactflow@11.11.4/dist/style.css" />
     <style>
+      /* Initial loading spinner styles */
+      #root:empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+      #loading-spinner {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+        color: #64748b; /* text-gray-500 */
+      }
+      .dark #loading-spinner {
+        color: #94a3b8; /* text-gray-400 */
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 5px solid #e2e8f0; /* border-gray-200 */
+        border-bottom-color: #4f46e5; /* border-indigo-600 */
+        border-radius: 50%;
+        display: inline-block;
+        box-sizing: border-box;
+        animation: rotation 1s linear infinite;
+      }
+      .dark .spinner {
+        border-color: #334155; /* dark:border-gray-700 */
+        border-bottom-color: #818cf8; /* dark:border-indigo-400 */
+      }
+      @keyframes rotation {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
       /* Basic styles for React Flow */
       .react-flow__pane {
         cursor: grab;
@@ -131,7 +166,12 @@
 </script>
 </head>
   <body class="bg-gray-50 dark:bg-gray-950">
-    <div id="root"></div>
+    <div id="root">
+      <div id="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading AI Builder...</p>
+      </div>
+    </div>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>
