@@ -4,14 +4,10 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  // WARNING: Hardcoding API keys is a major security risk.
-  // This key will be exposed to anyone who inspects your site's code.
-  // It is strongly recommended to use environment variables instead.
-  // For example, in Netlify, set VITE_API_KEY in your site's "Build & deploy" > "Environment" settings.
-  // The original, secure code was:
-  // 'process.env.VITE_API_KEY': JSON.stringify(process.env.VITE_API_KEY)
+  // The API key is now securely sourced from environment variables.
+  // Make sure to set the API_KEY environment variable in your deployment environment.
   define: {
-    'process.env.VITE_API_KEY': JSON.stringify('AIzaSyCf67quQ8AZtIzocZCtloTI8M4a52AGtPI')
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   },
   build: {
     rollupOptions: {

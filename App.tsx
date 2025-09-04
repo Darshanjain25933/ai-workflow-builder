@@ -86,7 +86,7 @@ const AppContent: React.FC = () => {
 
   const { screenToFlowPosition, setViewport, getViewport, fitView, deleteElements, getNodes, getEdges } = useReactFlow();
   
-  const API_KEY = process.env.VITE_API_KEY;
+  const API_KEY = process.env.API_KEY;
 
   const nodeTypes = useMemo(() => ({
     userQuery: UserQueryNode, 
@@ -388,7 +388,6 @@ const AppContent: React.FC = () => {
         if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) return;
 
         if ((event.key === 'Backspace' || event.key === 'Delete')) {
-           const { getNodes, getEdges, deleteElements } = useReactFlow.getState();
             const selectedNodes = getNodes().filter((n) => n.selected);
             const selectedEdges = getEdges().filter((e) => e.selected);
             if (selectedNodes.length > 0 || selectedEdges.length > 0) {
@@ -403,7 +402,7 @@ const AppContent: React.FC = () => {
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [handleUndo, handleRedo, handleSave, handleLoad, handleRunWorkflow]);
+  }, [getNodes, getEdges, deleteElements, handleUndo, handleRedo, handleSave, handleLoad, handleRunWorkflow]);
 
   const handleLoadTemplate = useCallback((template: WorkflowTemplate) => {
     const workflowClone = JSON.parse(JSON.stringify(template.workflow));
@@ -462,7 +461,7 @@ const AppContent: React.FC = () => {
               <li>Create a new variable with the following name and value:</li>
             </ol>
             <div className="mt-3 font-mono text-xs bg-gray-200 dark:bg-gray-700 p-3 rounded">
-              <span className="font-bold">Name:</span> VITE_API_KEY<br/>
+              <span className="font-bold">Name:</span> API_KEY<br/>
               <span className="font-bold">Value:</span> your_actual_google_api_key
             </div>
             <p className="mt-4 text-xs text-red-600 dark:text-red-400 font-semibold">
