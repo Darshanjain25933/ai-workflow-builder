@@ -1,5 +1,4 @@
 import React from 'react';
-// FIX: 'MousePointerSquare' is not an exported member of 'lucide-react'. Changed to 'MousePointer'.
 import { ArrowLeft, MousePointer } from 'lucide-react';
 
 const EmptyCanvas: React.FC = () => {
