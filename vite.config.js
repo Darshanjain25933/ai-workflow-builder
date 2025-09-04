@@ -11,7 +11,7 @@ export default defineConfig({
   // The original, secure code was:
   // 'process.env.VITE_API_KEY': JSON.stringify(process.env.VITE_API_KEY)
   define: {
-    'process.env.VITE_API_KEY': JSON.stringify('AIzaSyCvv6NEBGW_8e5IfIUpAe45uT_Fa68sUS4')
+    'process.env.VITE_API_KEY': JSON.stringify('AIzaSyCf67quQ8AZtIzocZCtloTI8M4a52AGtPI')
   },
   build: {
     rollupOptions: {
