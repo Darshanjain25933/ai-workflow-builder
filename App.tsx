@@ -24,6 +24,7 @@ import SignInModal from './components/SignInModal';
 import ExecutionLogPanel from './components/ExecutionLogPanel';
 import HelpChatModal from './components/HelpChatModal';
 import WelcomeModal from './components/WelcomeModal';
+import ApiConfigErrorModal from './components/ApiConfigErrorModal';
 import EmptyCanvas from './components/EmptyCanvas';
 import Button from './components/ui/Button';
 import { runWorkflowApi } from './services/apiService';
@@ -66,6 +67,7 @@ const AppContent: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isHelpModalOpen, setHelpModalOpen] = useState(false);
   const [isWelcomeModalOpen, setWelcomeModalOpen] = useState(false);
+  const [apiConfigError, setApiConfigError] = useState<string | null>(null);
 
   // Undo/Redo state
   const [history, setHistory] = useState<HistoryEntry[]>([{ ...initialWorkflow }]);
@@ -315,6 +317,12 @@ const AppContent: React.FC = () => {
         toast.success('Workflow finished successfully!');
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred.';
+
+        // Check for the specific API configuration error
+        if (errorMessage.includes('Generative Language API has not been used')) {
+            setApiConfigError(errorMessage);
+        }
+
         const failedNodeId = error instanceof Error ? (error as any).cause : undefined;
         let failedNode = failedNodeId ? nodes.find(n => n.id === failedNodeId) : null;
         toast.error(`Workflow failed: ${errorMessage}`);
@@ -474,6 +482,7 @@ const AppContent: React.FC = () => {
   return (
     <div className="flex h-screen w-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans overflow-hidden">
       <Toaster position="bottom-right" toastOptions={{ style: { background: isDarkMode ? '#1e2b3b' : '#ffffff', color: isDarkMode ? '#f1f5f9' : '#0f172a' } }} />
+      <ApiConfigErrorModal isOpen={!!apiConfigError} errorMessage={apiConfigError} onClose={() => setApiConfigError(null)} />
       <HelpChatModal isOpen={isHelpModalOpen} onClose={() => setHelpModalOpen(false)} />
       <WelcomeModal isOpen={isWelcomeModalOpen} onClose={() => setWelcomeModalOpen(false)} />
 
